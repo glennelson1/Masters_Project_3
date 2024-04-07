@@ -32,7 +32,7 @@ void APCG_FitnessFunc::SpawnGrid()
 	DeleteGrid();
 	m_loc = 0;
 	
-	LevelSeq = "3,3,4,4,0,0,4,5,0,0,6,2,1,3,5,6,4,4,3,2,0,4,4,5,0,5,2,2,1,4,5";
+	
 
 	
 	
@@ -96,7 +96,8 @@ void APCG_FitnessFunc::SpawnGrid()
 	}
 	else
 	{
-		for (int i = 0; i < LevelSeq.Len(); i++)
+		LevelSeq = "1,6,2,1,3,6,3,0,6,6,4,5,5,2,1,1,";
+		for (int i = 0; i <= 30; i++)
 		{
 			//UE_LOG(LogTemp, Warning, TEXT("The integer value is: %d"), LevelSeq[i]);
 		
@@ -131,6 +132,7 @@ void APCG_FitnessFunc::SpawnGrid()
 			
 			}
 		}
+		UE_LOG(LogTemp, Warning, TEXT("The Actor's name is %s"), *LevelSeq);
 	}
 	
 	
@@ -233,30 +235,38 @@ void APCG_FitnessFunc::SpawnTwoLargePlatform()
 
 void APCG_FitnessFunc::SaveLevelSeqToFile()
 {
-	// Construct the file path for the LevelSequences file
 	FString SaveFilePath = FPaths::ProjectDir() + TEXT("/LevelSequences/AllGoodLevelSeqs.txt");
+	int32 ChunkSize = 30; // Size of each small sequence //11
 
-	
-	
 	// Ensure the directory exists before trying to save the file
+	FString SaveDirectory = FPaths::GetPath(SaveFilePath);
 	IFileManager& FileManager = IFileManager::Get();
-	if (!FileManager.DirectoryExists(*FPaths::GetPath(SaveFilePath)))
+	if (!FileManager.DirectoryExists(*SaveDirectory))
 	{
-		FileManager.MakeDirectory(*FPaths::GetPath(SaveFilePath), true);
+		FileManager.MakeDirectory(*SaveDirectory, true);
 	}
 
-	// Append the current LevelSeq to the file, with a newline character for separation
-	FString ContentToSave = LevelSeq + TEXT("\n"); // Adding a newline character to separate each LevelSeq entry
-	bool bWasSuccessful = FFileHelper::SaveStringToFile(ContentToSave, *SaveFilePath, FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
+	// Break down LevelSeq into smaller sequences of ChunkSize and save each
+	for (int32 StartIndex = 0; StartIndex < LevelSeq.Len(); StartIndex += ChunkSize)
+	{
+		// Extract a substring of ChunkSize length from LevelSeq
+		FString SubSequence = LevelSeq.Mid(StartIndex, ChunkSize);
+        
+		// Ensure it ends with a newline for readability in the file
+		FString ContentToSave = SubSequence + TEXT("\n");
 
-	// Log whether the operation was successful
-	if (bWasSuccessful)
-	{
-		UE_LOG(LogTemp, Log, TEXT("LevelSeq successfully appended to %s"), *SaveFilePath);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed to append LevelSeq to %s"), *SaveFilePath);
+		// Attempt to append the content to the specified file
+		bool bWasSuccessful = FFileHelper::SaveStringToFile(ContentToSave, *SaveFilePath, FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
+
+		// Optionally, log each chunk save attempt
+		if (bWasSuccessful)
+		{
+			UE_LOG(LogTemp, Log, TEXT("Subsequence successfully appended to %s"), *SaveFilePath);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Failed to append Subsequence to %s"), *SaveFilePath);
+		}
 	}
 }
 

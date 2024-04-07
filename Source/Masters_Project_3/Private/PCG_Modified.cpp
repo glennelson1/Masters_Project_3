@@ -32,7 +32,7 @@ void APCG_Modified::SpawnGrid()
 	DeleteGrid();
 	m_loc = 0;
 	num = 0;
-	LevelSeq = "3,3,4,4,0,0,4,5,0,0,6,2,1,3,5,6,4,4,3,2,0,4,4,5,0,5,2,2,1,4,5";
+	
 
 	
 	
@@ -40,7 +40,7 @@ void APCG_Modified::SpawnGrid()
 	{
 		for (int i = 0; i <= 15; i++)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Running"));
+			
 			int32 RandomInt= FMath::RandRange(0, 6);
 			//UE_LOG(LogTemp, Warning, TEXT("The integer value is: %d"), RandomInt);
 			switch(RandomInt)
@@ -85,10 +85,11 @@ void APCG_Modified::SpawnGrid()
 				break;
 			}
 		}
-		//UE_LOG(LogTemp, Warning, TEXT("The Actor's name is %s"), *LevelSeq);
+		UE_LOG(LogTemp, Warning, TEXT("The Actor's name is %s"), *LevelSeq);
 	}
 	else
 	{
+		LevelSeq = "4,1,5,0,6,3,2,0,1,5,6,1,4,4,3,6,";
 		for (int i = 0; i < LevelSeq.Len(); i++)
 		{
 			//UE_LOG(LogTemp, Warning, TEXT("The integer value is: %d"), LevelSeq[i]);
