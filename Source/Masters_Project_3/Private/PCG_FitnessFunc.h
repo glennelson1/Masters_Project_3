@@ -4,21 +4,22 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "PCG_Modified.generated.h"
+#include "PCG_FitnessFunc.generated.h"
 
 UCLASS()
-class APCG_Modified : public AActor
+class APCG_FitnessFunc : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	APCG_Modified();
+	APCG_FitnessFunc();
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	
 
 	UPROPERTY(EditAnywhere, Category = "Spawning")
 	bool RandomGen;
@@ -38,10 +39,14 @@ protected:
 	void SpawnSinglePlatform();
 	void SpawnTwoPlatform();
 	void SpawnTwoLargePlatform();
-
+	UFUNCTION(BlueprintCallable)
+	void SaveLevelSeqToFile();
+	
 	int m_loc;
-	int num;
+	
 	FString LevelSeq;
+    int m_PreviousSect;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
