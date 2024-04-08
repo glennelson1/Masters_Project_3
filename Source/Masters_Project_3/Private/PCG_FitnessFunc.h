@@ -34,15 +34,15 @@ protected:
 	
 	void SpawnEmptySection();
 	void SpawnPipeSection();
-	void SpawnStairsSection();
-	void SpawnSingleBlockSection();
-	void SpawnSinglePlatform();
+	void SpawnBlockSection(int m_NumType, int m_length);
+	void SpawnPlatform(int m_NumType, int m_length);
 	void SpawnTwoPlatform();
 	void SpawnTwoLargePlatform();
 	UFUNCTION(BlueprintCallable)
 	void SaveLevelSeqToFile();
 	
 	int m_loc;
+	
 	
 	FString LevelSeq;
     int m_PreviousSect;

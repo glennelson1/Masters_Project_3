@@ -32,10 +32,6 @@ void APCG_FitnessFunc::SpawnGrid()
 	DeleteGrid();
 	m_loc = 0;
 	
-	
-
-	
-	
 	if (RandomGen)
 	{
 		for (int i = 0; i <= 15; i++)
@@ -51,37 +47,37 @@ void APCG_FitnessFunc::SpawnGrid()
 				LevelSeq += FString::Printf(TEXT("%d,"), 0);
 				m_PreviousSect = 0;
 				break;
-			case 1:
+			case 1://pipes
 				SpawnPipeSection();
 				m_loc += 10;
 				LevelSeq += FString::Printf(TEXT("%d,"), 1);
 				m_PreviousSect = 1;
 				break;
-			case 2:
-				SpawnStairsSection();
+			case 2://stairs 
+				SpawnBlockSection(3, 6);
 				m_loc += 10;
 				LevelSeq += FString::Printf(TEXT("%d,"), 2);
 				m_PreviousSect = 2;
 				break;
-			case 3:
-				SpawnSingleBlockSection();
+			case 3://single block
+				SpawnBlockSection(5, 6);
 				m_loc += 10;
 				LevelSeq += FString::Printf(TEXT("%d,"), 3);
 				m_PreviousSect = 3;
 				break;
-			case 4:
-				SpawnSinglePlatform();
+			case 4://one platform
+				//SpawnSinglePlatform();
 				m_loc += 10;
 				LevelSeq += FString::Printf(TEXT("%d,"), 4);
 				m_PreviousSect = 4;
 				break;
-			case 5:
+			case 5://small platforms
 				SpawnTwoPlatform();
 				m_loc += 10;
 				LevelSeq += FString::Printf(TEXT("%d,"), 5);
 				m_PreviousSect = 5;
 				break;
-			case 6:
+			case 6://two large platforms
 				SpawnTwoLargePlatform();
 				m_loc += 10;
 				LevelSeq += FString::Printf(TEXT("%d,"), 6);
@@ -112,15 +108,15 @@ void APCG_FitnessFunc::SpawnGrid()
 				m_loc += 10;
 				break;
 			case '2':
-				SpawnStairsSection();
+				SpawnBlockSection(3, 6);
 				m_loc += 10;
 				break;
 			case '3':
-				SpawnSingleBlockSection();
+				SpawnBlockSection(5, 6);
 				m_loc += 10;
 				break;
 			case '4':
-				SpawnSinglePlatform();
+				//SpawnSinglePlatform();
 				m_loc += 10;
 				break;
 			case '5':
@@ -174,25 +170,18 @@ void APCG_FitnessFunc::SpawnPipeSection()
 	Cellref.Add(NewCell);
 }
 
-void APCG_FitnessFunc::SpawnStairsSection()
+
+
+void APCG_FitnessFunc::SpawnBlockSection(int m_NumType, int m_length)
 {
 	SpawnEmptySection();
-	FVector SpawnLocation = FVector((m_loc + 6) * 100, 0,100); 
+	FVector SpawnLocation = FVector((m_loc + m_length) * 100, 0,400); 
 	AActor* NewCell;
-	NewCell = GetWorld()->SpawnActor<AActor>(CellClasses[3], SpawnLocation, FRotator::ZeroRotator);
+	NewCell = GetWorld()->SpawnActor<AActor>(CellClasses[m_NumType], SpawnLocation, FRotator::ZeroRotator);
 	Cellref.Add(NewCell);
 }
 
-void APCG_FitnessFunc::SpawnSingleBlockSection()
-{
-	SpawnEmptySection();
-	FVector SpawnLocation = FVector((m_loc + 6) * 100, 0,400); 
-	AActor* NewCell;
-	NewCell = GetWorld()->SpawnActor<AActor>(CellClasses[5], SpawnLocation, FRotator::ZeroRotator);
-	Cellref.Add(NewCell);
-}
-
-void APCG_FitnessFunc::SpawnSinglePlatform()
+void APCG_FitnessFunc::SpawnPlatform(int m_NumType, int m_length)
 {
 	SpawnEmptySection();
 	for (int32 X = m_loc; X < m_loc + 3; X++)
@@ -208,7 +197,7 @@ void APCG_FitnessFunc::SpawnSinglePlatform()
 void APCG_FitnessFunc::SpawnTwoPlatform()
 {
 	SpawnEmptySection();
-	SpawnSinglePlatform();
+	SpawnPlatform(4, 5);
 	for (int32 X = m_loc; X < m_loc + 3; X++)
 	{
 		FVector SpawnLocation = FVector((X + 10) * 100, 0,800); 
@@ -221,7 +210,7 @@ void APCG_FitnessFunc::SpawnTwoPlatform()
 void APCG_FitnessFunc::SpawnTwoLargePlatform()
 {
 	SpawnEmptySection();
-	SpawnSinglePlatform();
+	//SpawnSinglePlatform();
 	
 	for (int32 X = m_loc; X < m_loc + 6; X++)
 	{
