@@ -53,6 +53,7 @@ void APCG_Modified::SpawnGrid()
 			case 1:
 				SpawnPipeSection();
 				m_loc += 10;
+				
 				LevelSeq += FString::Printf(TEXT("%d,"), 1);
 				break;
 			case 2:

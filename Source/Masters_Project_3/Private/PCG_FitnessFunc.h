@@ -34,14 +34,22 @@ protected:
 	
 	void SpawnEmptySection();
 	void SpawnPipeSection();
-	void SpawnBlockSection(int m_NumType, int m_length);
-	void SpawnPlatform(int m_NumType, int m_length);
-	void SpawnTwoPlatform();
-	void SpawnTwoLargePlatform();
+	void SpawnBlockSection(int BlockType, int length, int xAxis);
+	void SpawnPlatform(int BlockType, int length);
+	void SpawnTopPlatform(int length);
 	UFUNCTION(BlueprintCallable)
 	void SaveLevelSeqToFile();
-	
+
+	void SpawnUnder();
+	int32  SelectSectionBasedOnProbability(const TMap<int32, float>& Probabilities);
+	void DetermineProbability();
+	void NormalizeProbabilities(TMap<int32, float>& Probabilities);
 	int m_loc;
+	TMap<int32, float> SectionProbabilities;
+
+	void Fitness();
+	int m_emptySect, m_pipeSect, m_StairsSect, m_SingleBlockSect,m_singlePlat, m_SmallPlatSect, m_LargePlatSect;
+	int m_Fitness;
 	
 	
 	FString LevelSeq;
