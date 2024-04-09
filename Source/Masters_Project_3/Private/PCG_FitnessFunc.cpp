@@ -43,71 +43,71 @@ void APCG_FitnessFunc::SpawnGrid()
 	
 	if (RandomGen)
 	{
-		for (int i = 0; i <= 15; i++)
+		for (int i = 0; i <= 20; i++)
 		{
 			  // Call DetermineProbability to adjust the spawn probabilities based on the previous section
-            DetermineProbability();
+			DetermineProbability();
 
-            // Select a section to spawn based on the adjusted probabilities
-            int32 SelectedSection = SelectSectionBasedOnProbability(SectionProbabilities);
+			// Select the next section type based on the adjusted probabilities
+			int32 SelectedSection = SelectSectionBasedOnProbability(SectionProbabilities);
 
+			
             // Spawn the selected section
             switch(SelectedSection)
             {
             case 0:
                 SpawnEmptySection();
-                m_loc += 10;
+               
                 LevelSeq += FString::Printf(TEXT("%d,"), 0);
                 m_emptySect++;
-                m_PreviousSect = 0;
+                
                 break;
             case 1: //pipes
                 SpawnPipeSection();
-                m_loc += 10;
+                
                 LevelSeq += FString::Printf(TEXT("%d,"), 1);
                 m_pipeSect++;
-                m_PreviousSect = 1;
+                
                 break;
             case 2: //stairs 
                 SpawnBlockSection(3, 6, 100);
-                m_loc += 10;
+                
                 LevelSeq += FString::Printf(TEXT("%d,"), 2);
                 m_StairsSect++;
-                m_PreviousSect = 2;
+              
                 break;
             case 3: //single block
                 SpawnBlockSection(5, 6, 400);
-                m_loc += 10;
+                
                 LevelSeq += FString::Printf(TEXT("%d,"), 3);
                 m_SingleBlockSect++;
-                m_PreviousSect = 3;
+                
                 break;
             case 4: //one platform
                 SpawnTopPlatform(3);
-                m_loc += 10;
-                LevelSeq += FString::Printf(TEXT("%d,"), 4);
+               
                 m_singlePlat++;
-                m_PreviousSect = 4;
+                
                 break;
             case 5: //small platforms
                 SpawnTopPlatform(3);
-                m_loc += 10;
-                LevelSeq += FString::Printf(TEXT("%d,"), 5);
                 m_SmallPlatSect++;
-                m_PreviousSect = 5;
+               
                 break;
             case 6: //two large platforms
                 SpawnTopPlatform(6);
-                m_loc += 10;
-                LevelSeq += FString::Printf(TEXT("%d,"), 6);
                 m_LargePlatSect++;
-                m_PreviousSect = 6;
+                
                 break;
             // Ensure there's a default case, possibly to handle unexpected values
             default:
                 UE_LOG(LogTemp, Warning, TEXT("Invalid section selection"));
                 break;
             }
+			m_loc += 10; // Assuming each section advances 'm_loc' by 10 units
+			LevelSeq += FString::Printf(TEXT("%d,"), SelectedSection);
+			m_PreviousSect = SelectedSection;
+			
         }
 	}
 	else
@@ -148,7 +148,7 @@ void APCG_FitnessFunc::SpawnGrid()
 			
 			}
 		}
-		//UE_LOG(LogTemp, Warning, TEXT("The Actor's name is %s"), *LevelSeq);
+		
 	}
 	
 	Fitness();
@@ -317,44 +317,57 @@ void APCG_FitnessFunc::DetermineProbability()
 		{2, 10.0f}, // Stairs
 		{3, 10.0f}, // Single Block
 		{4, 10.0f}, // One Platform
-		{5, 10.0f}, // Small Platforms
-		{6, 10.0f}  // Large Platforms
+		{5, 0.0f}, // Small Platforms
+		{6, 0.0f}  // Large Platforms
 	};
-
-	// Adjust probabilities based on the previously spawned section
-	// For example, after spawning a 'large platform' section, 
-	// you might want to increase the chance of spawning a 'stairs' section.
+	
 	switch(m_PreviousSect)
 	{
 	case 0: // Last section was Empty
-		SectionProbabilities[1] += 5.0f; // Slightly increase probability of Pipes
-		SectionProbabilities[2] += 5.0f; // Increase probability of Stairs to encourage verticality
+		SectionProbabilities[1] += 5.0f; 
+		SectionProbabilities[2] += 5.0f;
+		SectionProbabilities[0] -= 10.0f; 
 		break;
 	case 1: // Last section was Pipes
-		SectionProbabilities[0] += 5.0f; // Increase probability of Empty for a breather
-		SectionProbabilities[6] += 5.0f; // Increase probability of Large Platforms for variety
+		SectionProbabilities[0] += 5.0f;
+		SectionProbabilities[1] -= 5.0f; 
+		SectionProbabilities[6] += 5.0f;
+		SectionProbabilities[3] += 20.0f; 
 		break;
 	case 2: // Last section was Stairs
-		SectionProbabilities[3] += 10.0f; // Significantly increase probability of Single Block for challenge
-		SectionProbabilities[5] -= 5.0f; // Decrease probability of Small Platforms to avoid repetition
+		SectionProbabilities[3] += 10.0f; 
+		SectionProbabilities[5] -= 5.0f;
+		SectionProbabilities[3] -= 50.0f; 
 		break;
 	case 3: // Last section was Single Block
-		SectionProbabilities[4] += 5.0f; // Increase probability of One Platform for pacing
-		SectionProbabilities[0] += 10.0f; // Increase probability of Empty to break up the intensity
+		SectionProbabilities[3] -= 10.0f; 
+		SectionProbabilities[4] += 5.0f; 
+		SectionProbabilities[0] += 5.0f; 
 		break;
 	case 4: // Last section was One Platform
-		SectionProbabilities[5] += 10.0f; // Increase probability of Small Platforms for thematic continuation
-		SectionProbabilities[1] -= 5.0f; // Decrease probability of Pipes to avoid redundancy
+		SectionProbabilities[5] -= 5.0f; 
+		SectionProbabilities[5] += 10.0f; 
+		SectionProbabilities[1] -= 5.0f; 
 		break;
 	case 5: // Last section was Small Platforms
-		SectionProbabilities[6] += 15.0f; // Significantly increase probability of Large Platforms for a challenge
+		SectionProbabilities[5] -= 15.0f; 
+		SectionProbabilities[6] += 10.0f;
+		SectionProbabilities[4] += 10.0f;
 		break;
 	case 6: // Last section was Large Platforms
-		SectionProbabilities[2] += 10.0f; // Increase probability of Stairs to continue vertical gameplay
-		SectionProbabilities[0] += 5.0f; // Increase probability of Empty for a visual and gameplay breather
+		SectionProbabilities[5] -= 10.0f; 
+		SectionProbabilities[6] -= 10.0f;
+		SectionProbabilities[2] += 4.0f; 
+		SectionProbabilities[0] += 5.0f;
+		SectionProbabilities[4] += 10.0f;
 		break;
 	}
-
+	if(m_LargePlatSect >= 4 || m_SmallPlatSect >= 4)
+	{
+		SectionProbabilities[5] -= 10.0f;
+		SectionProbabilities[6] -= 10.0f; 
+	}
+	
 	// Normalize probabilities to ensure they sum to 100 (or another base value) if needed
 	NormalizeProbabilities(SectionProbabilities);
 }

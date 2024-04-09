@@ -50,7 +50,7 @@ protected:
 	void Fitness();
 	int m_emptySect, m_pipeSect, m_StairsSect, m_SingleBlockSect,m_singlePlat, m_SmallPlatSect, m_LargePlatSect;
 	int m_Fitness;
-	
+
 	
 	FString LevelSeq;
     int m_PreviousSect;
