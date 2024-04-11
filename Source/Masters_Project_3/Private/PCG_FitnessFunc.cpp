@@ -50,49 +50,39 @@ void APCG_FitnessFunc::SpawnGrid()
 
 			// Select the next section type based on the adjusted probabilities
 			int32 SelectedSection = SelectSectionBasedOnProbability(SectionProbabilities);
-
 			
             // Spawn the selected section
             switch(SelectedSection)
             {
             case 0:
                 SpawnEmptySection();
-               
-                LevelSeq += FString::Printf(TEXT("%d,"), 0);
                 m_emptySect++;
                 
                 break;
             case 1: //pipes
                 SpawnPipeSection();
-                
-                LevelSeq += FString::Printf(TEXT("%d,"), 1);
                 m_pipeSect++;
                 
                 break;
             case 2: //stairs 
                 SpawnBlockSection(3, 6, 100);
-                
-                LevelSeq += FString::Printf(TEXT("%d,"), 2);
                 m_StairsSect++;
               
                 break;
             case 3: //single block
                 SpawnBlockSection(5, 6, 400);
-                
-                LevelSeq += FString::Printf(TEXT("%d,"), 3);
                 m_SingleBlockSect++;
                 
                 break;
             case 4: //one platform
                 SpawnTopPlatform(3);
-               
                 m_singlePlat++;
                 
                 break;
             case 5: //small platforms
                 SpawnTopPlatform(3);
                 m_SmallPlatSect++;
-               
+            	
                 break;
             case 6: //two large platforms
                 SpawnTopPlatform(6);
@@ -232,13 +222,19 @@ void APCG_FitnessFunc::SpawnTopPlatform(int length)
 	}
 }
 
+void APCG_FitnessFunc::SpawnUnder()
+{
+	FVector SpawnLocation = FVector(m_loc * 100, 0,-800); 
+	AActor* NewCell;
+	NewCell = GetWorld()->SpawnActor<AActor>(CellClasses[8], SpawnLocation, FRotator::ZeroRotator);
+	Cellref.Add(NewCell);
+}
 
 void APCG_FitnessFunc::SaveLevelSeqToFile()
 {
 	FString SaveFilePath = FPaths::ProjectDir() + TEXT("/LevelSequences/AllGoodLevelSeqs.txt");
-	int32 ChunkSize = 32; // Size of each small sequence //11
-
-	// Ensure the directory exists before trying to save the file
+	int32 ChunkSize = 50;
+	
 	FString SaveDirectory = FPaths::GetPath(SaveFilePath);
 	IFileManager& FileManager = IFileManager::Get();
 	if (!FileManager.DirectoryExists(*SaveDirectory))
@@ -246,19 +242,19 @@ void APCG_FitnessFunc::SaveLevelSeqToFile()
 		FileManager.MakeDirectory(*SaveDirectory, true);
 	}
 
-	// Break down LevelSeq into smaller sequences of ChunkSize and save each
+
 	for (int32 StartIndex = 0; StartIndex < LevelSeq.Len(); StartIndex += ChunkSize)
 	{
-		// Extract a substring of ChunkSize length from LevelSeq
+		
 		FString SubSequence = LevelSeq.Mid(StartIndex, ChunkSize);
         
-		// Ensure it ends with a newline for readability in the file
+		
 		FString ContentToSave = SubSequence + TEXT("\n");
 
-		// Attempt to append the content to the specified file
+		
 		bool bWasSuccessful = FFileHelper::SaveStringToFile(ContentToSave, *SaveFilePath, FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
 
-		// Optionally, log each chunk save attempt
+		
 		if (bWasSuccessful)
 		{
 			UE_LOG(LogTemp, Log, TEXT("Subsequence successfully appended to %s"), *SaveFilePath);
@@ -270,89 +266,90 @@ void APCG_FitnessFunc::SaveLevelSeqToFile()
 	}
 }
 
-void APCG_FitnessFunc::SpawnUnder()
-{
-	FVector SpawnLocation = FVector(m_loc * 100, 0,-800); 
-	AActor* NewCell;
-	NewCell = GetWorld()->SpawnActor<AActor>(CellClasses[8], SpawnLocation, FRotator::ZeroRotator);
-	Cellref.Add(NewCell);
-}
+
 
 int32  APCG_FitnessFunc::SelectSectionBasedOnProbability(const TMap<int32, float>& Probabilities)
 {
-	// Calculate the total sum of all probabilities
+	
 	float TotalProbability = 0.0f;
 	for (const auto& Elem : Probabilities)
 	{
 		TotalProbability += Elem.Value;
 	}
 
-	// Generate a random number in the range [0, TotalProbability]
+	
 	float RandomPoint = FMath::FRandRange(0.0f, TotalProbability);
 
-	// Convert the probabilities to a cumulative distribution
+	
 	float CumulativeProbability = 0.0f;
 	for (const auto& Elem : Probabilities)
 	{
 		CumulativeProbability += Elem.Value;
 
-		// Check if the random point falls within the current cumulative probability
+		
 		if (RandomPoint <= CumulativeProbability)
 		{
 			return Elem.Key; // Return the section type
 		}
 	}
 
-	// In case of rounding errors or empty map, return a default value or handle the error
-	// Assuming 0 is a valid default
 	return 0;
 }
 
 void APCG_FitnessFunc::DetermineProbability()
 {
-	// Define base probabilities for each section type
+	
 	SectionProbabilities = {
 		{0, 10.0f}, // Empty
 		{1, 10.0f}, // Pipes
 		{2, 10.0f}, // Stairs
 		{3, 10.0f}, // Single Block
 		{4, 10.0f}, // One Platform
-		{5, 0.0f}, // Small Platforms
+		{5, -10.0f}, // Small Platforms
 		{6, 0.0f}  // Large Platforms
 	};
 	
+			
 	switch(m_PreviousSect)
 	{
 	case 0: // Last section was Empty
 		SectionProbabilities[1] += 5.0f; 
 		SectionProbabilities[2] += 5.0f;
-		SectionProbabilities[0] -= 10.0f; 
+		SectionProbabilities[0] -= 10.0f;
+		SectionProbabilities[5] += 10.0f;
+		SectionProbabilities[6] += 15.0f;
 		break;
 	case 1: // Last section was Pipes
 		SectionProbabilities[0] += 5.0f;
-		SectionProbabilities[1] -= 5.0f; 
+		SectionProbabilities[1] -= 5.0f;
+		SectionProbabilities[5] += 5.0f;
 		SectionProbabilities[6] += 5.0f;
 		SectionProbabilities[3] += 20.0f; 
 		break;
 	case 2: // Last section was Stairs
 		SectionProbabilities[3] += 10.0f; 
 		SectionProbabilities[5] -= 5.0f;
-		SectionProbabilities[3] -= 50.0f; 
+		SectionProbabilities[3] += 5.0f;
+		SectionProbabilities[5] += 5.0f;
+		SectionProbabilities[6] += 5.0f;
 		break;
 	case 3: // Last section was Single Block
 		SectionProbabilities[3] -= 10.0f; 
 		SectionProbabilities[4] += 5.0f; 
-		SectionProbabilities[0] += 5.0f; 
+		SectionProbabilities[0] += 5.0f;
+		SectionProbabilities[5] += 5.0f;
+		SectionProbabilities[6] += 5.0f;
 		break;
 	case 4: // Last section was One Platform
-		SectionProbabilities[5] -= 5.0f; 
-		SectionProbabilities[5] += 10.0f; 
+		SectionProbabilities[5] += 10.0f;
+		SectionProbabilities[6] += 10.0f;
 		SectionProbabilities[1] -= 5.0f; 
 		break;
 	case 5: // Last section was Small Platforms
-		SectionProbabilities[5] -= 15.0f; 
+		SectionProbabilities[5] -= 100.0f; 
 		SectionProbabilities[6] += 10.0f;
 		SectionProbabilities[4] += 10.0f;
+		
 		break;
 	case 6: // Last section was Large Platforms
 		SectionProbabilities[5] -= 10.0f; 
@@ -368,7 +365,10 @@ void APCG_FitnessFunc::DetermineProbability()
 		SectionProbabilities[6] -= 10.0f; 
 	}
 	
-	// Normalize probabilities to ensure they sum to 100 (or another base value) if needed
+	// for (const auto& Elem : SectionProbabilities)
+	// {
+	// 	UE_LOG(LogTemp, Log, TEXT("SectionProbabilities[%d]: %f"), Elem.Key, Elem.Value);
+	// }
 	NormalizeProbabilities(SectionProbabilities);
 }
 
@@ -382,8 +382,9 @@ void APCG_FitnessFunc::NormalizeProbabilities(TMap<int32, float>& Probabilities)
 
 	for (auto& Elem : Probabilities)
 	{
-		Elem.Value = (Elem.Value / Total) * 100.0f; // Adjusting each probability to ensure the sum is 100
+		Elem.Value = (Elem.Value / Total) * 100.0f; 
 	}
+	
 }
 
 void APCG_FitnessFunc::Fitness()
@@ -394,6 +395,8 @@ void APCG_FitnessFunc::Fitness()
 	
 	UE_LOG(LogTemp, Warning, TEXT("The integer is: %d"), m_Fitness);
 }
+
+
 
 
 // Called every frame
