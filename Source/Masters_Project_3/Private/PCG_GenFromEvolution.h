@@ -4,50 +4,54 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "PCG_Evoluctionary.generated.h"
+#include "PCG_GenFromEvolution.generated.h"
 
 UCLASS()
-class APCG_Evoluctionary : public AActor
+class APCG_GenFromEvolution : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	APCG_Evoluctionary();
+	APCG_GenFromEvolution();
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	TArray<FString> Population;
-	TArray<float> FitnessScores;
 
-	void InitializePopulation();
-	void EvaluatePopulation();
-	void Selection();
-	void Crossover();
-	void Mutation();
-	float CalculateFitness(const FString& LevelSequence);
-
+	UPROPERTY(EditAnywhere, Category = "Spawning")
+	bool RandomGen;
 	
-	UFUNCTION(BlueprintCallable)
-	void SpawnGridFromGenome(const FString& Genome);
-
-
 	UPROPERTY(EditAnywhere, Category = "Grid")
 	TArray<TSubclassOf<AActor>> CellClasses;
 	UFUNCTION(BlueprintCallable)
 	void DeleteGrid();
 	TArray<AActor*> Cellref;
-
+	UFUNCTION(BlueprintCallable)
+	void SpawnGrid();
 	
-	int m_loc;
 	void SpawnEmptySection();
 	void SpawnPipeSection();
 	void SpawnBlockSection(int BlockType, int length, int xAxis);
 	void SpawnPlatform(int BlockType, int length);
 	void SpawnTopPlatform(int length);
 	void SpawnUnder();
-	void SaveData(const FString& Genome, const FString& Data);
+
+	UFUNCTION(BlueprintCallable)
+	void SaveLevelSeqToFile();
+	int32  SelectSectionBasedOnProbability(const TMap<int32, float>& Probabilities);
+	void DetermineProbability();
+	void NormalizeProbabilities(TMap<int32, float>& Probabilities);
+	int m_loc;
+	TMap<int32, float> SectionProbabilities;
+
+	void Fitness();
+	int m_emptySect, m_pipeSect, m_StairsSect, m_SingleBlockSect,m_singlePlat, m_SmallPlatSect, m_LargePlatSect;
+	int m_Fitness;
+	
+	
+	FString LevelSeq;
+	int m_PreviousSect;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

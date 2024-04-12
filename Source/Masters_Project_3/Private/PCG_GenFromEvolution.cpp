@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "PCG_FitnessFunc.h"
+#include "PCG_GenFromEvolution.h"
 
 // Sets default values
-APCG_FitnessFunc::APCG_FitnessFunc()
+APCG_GenFromEvolution::APCG_GenFromEvolution()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -18,12 +18,12 @@ APCG_FitnessFunc::APCG_FitnessFunc()
 }
 
 // Called when the game starts or when spawned
-void APCG_FitnessFunc::BeginPlay()
+void APCG_GenFromEvolution::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
-void APCG_FitnessFunc::DeleteGrid()
+void APCG_GenFromEvolution::DeleteGrid()
 {
 	for (AActor* actor : Cellref)
 	{
@@ -36,7 +36,7 @@ void APCG_FitnessFunc::DeleteGrid()
 	m_Fitness = 0;
 	LevelSeq.Empty();
 }
-void APCG_FitnessFunc::SpawnGrid()
+void APCG_GenFromEvolution::SpawnGrid()
 {
 	DeleteGrid();
 	m_loc = 0;
@@ -142,7 +142,7 @@ void APCG_FitnessFunc::SpawnGrid()
 		
 	}
 }
-void APCG_FitnessFunc::SpawnEmptySection()
+void APCG_GenFromEvolution::SpawnEmptySection()
 {
 	int32 RandomInt= FMath::RandRange(0, 10);
 	
@@ -164,7 +164,7 @@ void APCG_FitnessFunc::SpawnEmptySection()
 	
 }
 
-void APCG_FitnessFunc::SpawnPipeSection()
+void APCG_GenFromEvolution::SpawnPipeSection()
 {
 	SpawnEmptySection();
 	
@@ -186,7 +186,7 @@ void APCG_FitnessFunc::SpawnPipeSection()
 
 
 
-void APCG_FitnessFunc::SpawnBlockSection(int BlockType, int length, int zAxis)
+void APCG_GenFromEvolution::SpawnBlockSection(int BlockType, int length, int zAxis)
 {
 	SpawnEmptySection();
 	FVector SpawnLocation = FVector((m_loc + length) * 100, 0,zAxis); 
@@ -195,7 +195,7 @@ void APCG_FitnessFunc::SpawnBlockSection(int BlockType, int length, int zAxis)
 	Cellref.Add(NewCell);
 }
 
-void APCG_FitnessFunc::SpawnPlatform(int BlockType, int length)
+void APCG_GenFromEvolution::SpawnPlatform(int BlockType, int length)
 {
 	SpawnEmptySection();
 	for (int32 X = m_loc; X < m_loc + 3; X++)
@@ -208,7 +208,7 @@ void APCG_FitnessFunc::SpawnPlatform(int BlockType, int length)
 	
 }
 
-void APCG_FitnessFunc::SpawnTopPlatform(int length)
+void APCG_GenFromEvolution::SpawnTopPlatform(int length)
 {
 	SpawnEmptySection();
 	SpawnPlatform(4, 5);
@@ -221,7 +221,7 @@ void APCG_FitnessFunc::SpawnTopPlatform(int length)
 	}
 }
 
-void APCG_FitnessFunc::SpawnUnder()
+void APCG_GenFromEvolution::SpawnUnder()
 {
 	FVector SpawnLocation = FVector(m_loc * 100, 0,-800); 
 	AActor* NewCell;
@@ -229,7 +229,7 @@ void APCG_FitnessFunc::SpawnUnder()
 	Cellref.Add(NewCell);
 }
 
-void APCG_FitnessFunc::SaveLevelSeqToFile()
+void APCG_GenFromEvolution::SaveLevelSeqToFile()
 {
 	FString SaveFilePath = FPaths::ProjectDir() + TEXT("/LevelSequences/AllGoodLevelSeqs.txt");
 	int32 ChunkSize = 50;
@@ -267,7 +267,7 @@ void APCG_FitnessFunc::SaveLevelSeqToFile()
 
 
 
-int32  APCG_FitnessFunc::SelectSectionBasedOnProbability(const TMap<int32, float>& Probabilities)
+int32  APCG_GenFromEvolution::SelectSectionBasedOnProbability(const TMap<int32, float>& Probabilities)
 {
 	
 	float TotalProbability = 0.0f;
@@ -295,7 +295,7 @@ int32  APCG_FitnessFunc::SelectSectionBasedOnProbability(const TMap<int32, float
 	return 0;
 }
 
-void APCG_FitnessFunc::DetermineProbability()
+void APCG_GenFromEvolution::DetermineProbability()
 {
 	
 	SectionProbabilities = {
@@ -364,13 +364,13 @@ void APCG_FitnessFunc::DetermineProbability()
 		SectionProbabilities[4] += 10.0f;
 		break;
 	}
-	//UE_LOG(LogTemp, Warning, TEXT("The float value is: %f"), Fitness());
+	
 
 	
 	NormalizeProbabilities(SectionProbabilities);
 }
 
-void APCG_FitnessFunc::NormalizeProbabilities(TMap<int32, float>& Probabilities)
+void APCG_GenFromEvolution::NormalizeProbabilities(TMap<int32, float>& Probabilities)
 {
 	float Total = 0.0f;
 	for (const auto& Elem : Probabilities)
@@ -385,7 +385,7 @@ void APCG_FitnessFunc::NormalizeProbabilities(TMap<int32, float>& Probabilities)
 	
 }
 
-void APCG_FitnessFunc::Fitness()
+void APCG_GenFromEvolution::Fitness()
 {
 	
 	
@@ -396,7 +396,7 @@ void APCG_FitnessFunc::Fitness()
 }
 
 // Called every frame
-void APCG_FitnessFunc::Tick(float DeltaTime)
+void APCG_GenFromEvolution::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
