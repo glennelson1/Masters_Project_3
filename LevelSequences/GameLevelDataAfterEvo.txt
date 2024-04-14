@@ -1,0 +1,1 @@
+Genome: 6,0,1,4,1,1,0,1,2,0,3,0,0,5,3,4,6,1,0,2 | Data: Type 6: 2, Type 0: 6, Type 1: 5, Type 4: 2, Type 2: 2, Type 3: 2, Type 5: 1, 

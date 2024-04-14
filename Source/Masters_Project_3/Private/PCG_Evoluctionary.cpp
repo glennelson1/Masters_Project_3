@@ -9,6 +9,9 @@ APCG_Evoluctionary::APCG_Evoluctionary()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	InitializePopulation();
+	m_MutationRate = 0.1f;  
+	m_CurrentGeneration = 0;
+	m_EliteCount = 2; 
 }
 
 // Called when the game starts or when spawned
@@ -47,9 +50,13 @@ void APCG_Evoluctionary::EvaluatePopulation()
 void APCG_Evoluctionary::Selection()
 {
 	TArray<FString> NewPopulation;
-	int TournamentSize = 3;
 
-	for (int i = 0; i < Population.Num(); i++) {
+	
+	PreserveElites(NewPopulation);
+
+	// Perform tournament selection for the rest of the new population slots
+	int TournamentSize = 3;
+	while (NewPopulation.Num() < Population.Num()) {
 		FString BestGenome;
 		float BestFitness = -1;
 		for (int j = 0; j < TournamentSize; j++) {
@@ -64,6 +71,34 @@ void APCG_Evoluctionary::Selection()
 
 	Population = NewPopulation;
 }
+
+void APCG_Evoluctionary::PreserveElites(TArray<FString>& NewPopulation)
+{
+	TArray<int> IndexesOfElites;
+
+	// Find the indexes of the top elites based on their fitness scores
+	for (int i = 0; i < m_EliteCount; ++i) {
+		float MaxFitness = -1;
+		int IndexOfMax = -1;
+
+		for (int j = 0; j < FitnessScores.Num(); ++j) {
+			if (!IndexesOfElites.Contains(j) && FitnessScores[j] > MaxFitness) {
+				MaxFitness = FitnessScores[j];
+				IndexOfMax = j;
+			}
+		}
+
+		if (IndexOfMax != -1) {
+			IndexesOfElites.Add(IndexOfMax);
+		}
+	}
+
+	// Add elites to the new population directly
+	for (int Index : IndexesOfElites) {
+		NewPopulation.Add(Population[Index]);
+	}
+}
+
 
 void APCG_Evoluctionary::Crossover()
 {
@@ -91,14 +126,43 @@ void APCG_Evoluctionary::Crossover()
 	Population = NewPopulation;
 }
 
+float APCG_Evoluctionary::CalculateDiversity()
+{
+	TSet<FString> uniqueGenomes;
+	for (const FString& genome : Population) {
+		uniqueGenomes.Add(genome);
+	}
+	return static_cast<float>(uniqueGenomes.Num()) / Population.Num(); 
+}
+
+void APCG_Evoluctionary::AdjustMutationRate()
+{
+	// Reduce the mutation rate as the number of generations increases
+	float decayFactor = 1.0f - static_cast<float>(m_CurrentGeneration) / m_CurrentGeneration;
+	m_MutationRate = 0.1f * decayFactor;
+
+	// Calculate current diversity
+	float currentDiversity = CalculateDiversity();
+
+	// If diversity is too low, boost the mutation rate
+	if (currentDiversity < m_DiversityThreshold) {
+		m_MutationRate *= 1.5f;  // Increase mutation rate by 50%
+	}
+
+	// Ensure the mutation rate doesn't exceed original or drop too low
+	m_MutationRate = FMath::Clamp(m_MutationRate, 0.01f, 0.1f);
+
+	
+	m_CurrentGeneration++;
+}
+
 void APCG_Evoluctionary::Mutation()
 {
-	float MutationRate = 0.1f;  // Probability of mutation
 	for (FString& Genome : Population) {
 		TArray<FString> Sections;
 		Genome.ParseIntoArray(Sections, TEXT(","));
 		for (int i = 0; i < Sections.Num(); i++) {
-			if (FMath::FRand() < MutationRate) {
+			if (FMath::FRand() < m_MutationRate) { 
 				Sections[i] = FString::FromInt(FMath::RandRange(0, 6));
 			}
 		}
@@ -276,12 +340,20 @@ void APCG_Evoluctionary::SpawnUnder()
 
 void APCG_Evoluctionary::SaveData(const FString& Genome, const FString& Data)
 {
-	FString SaveFilePath = FPaths::ProjectDir() +  TEXT("/LevelSequences/GameLevelData.txt");
+	FString SaveFilePath;
+	// Check if it is the 100th generation
+	if (m_CurrentGeneration == 100) {
+		SaveFilePath = FPaths::ProjectDir() + TEXT("/LevelSequences/GameLevelDataAfterEvo.txt");
+	} else {
+		SaveFilePath = FPaths::ProjectDir() + TEXT("/LevelSequences/GameLevelData.txt");
+	}
+
 	FString ContentToSave = FString::Printf(TEXT("Genome: %s | Data: %s\n"), *Genome, *Data);
 
 	if (!FFileHelper::SaveStringToFile(ContentToSave, *SaveFilePath, FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append)) {
 		UE_LOG(LogTemp, Warning, TEXT("Failed to save data to %s"), *SaveFilePath);
 	}
+	
 }
 
 
@@ -291,6 +363,7 @@ void APCG_Evoluctionary::Tick(float DeltaTime)
 	EvaluatePopulation();
 	Selection();
 	Crossover();
+	AdjustMutationRate();  
 	Mutation();
 	SpawnGridFromGenome(Population[0]);
 

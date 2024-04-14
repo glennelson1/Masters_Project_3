@@ -20,11 +20,20 @@ protected:
 	virtual void BeginPlay() override;
 	TArray<FString> Population;
 	TArray<float> FitnessScores;
-
+	
+	float m_MutationRate;
+	int m_CurrentGeneration;
+	int m_MaxGenerations = 100;
+	float m_DiversityThreshold = 0.2f;
+	int m_EliteCount;
+	
 	void InitializePopulation();
 	void EvaluatePopulation();
 	void Selection();
+	void PreserveElites(TArray<FString>& NewPopulation);
 	void Crossover();
+	float CalculateDiversity();
+	void AdjustMutationRate();
 	void Mutation();
 	float CalculateFitness(const FString& LevelSequence);
 
