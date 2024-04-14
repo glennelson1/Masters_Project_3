@@ -4,57 +4,62 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "PCG_FitnessFunc.generated.h"
+#include "PCG_Evoluctionary.generated.h"
 
 UCLASS()
-class APCG_FitnessFunc : public AActor
+class APCG_Evoluctionary : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	APCG_FitnessFunc();
+	APCG_Evoluctionary();
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	TArray<FString> Population;
+	TArray<float> FitnessScores;
+	
+	float m_MutationRate;
+	int m_CurrentGeneration;
+	int m_MaxGenerations = 100;
+	float m_DiversityThreshold = 0.2f;
+	int m_EliteCount;
+	
+	void InitializePopulation();
+	void EvaluatePopulation();
+	void Selection();
+	void PreserveElites(TArray<FString>& NewPopulation);
+	void Crossover();
+	float CalculateDiversity();
+	void AdjustMutationRate();
+	void Mutation();
+	float CalculateFitness(const FString& LevelSequence);
+
+	
+	UFUNCTION(BlueprintCallable)
+	void SpawnLevel();
+	
+	void SpawnGridFromGenome(const FString& Genome);
 
 	
 
-	UPROPERTY(EditAnywhere, Category = "Spawning")
-	bool RandomGen;
-	
 	UPROPERTY(EditAnywhere, Category = "Grid")
 	TArray<TSubclassOf<AActor>> CellClasses;
 	UFUNCTION(BlueprintCallable)
 	void DeleteGrid();
 	TArray<AActor*> Cellref;
-	UFUNCTION(BlueprintCallable)
-	void SpawnGrid();
+
 	
+	int m_loc;
 	void SpawnEmptySection();
 	void SpawnPipeSection();
 	void SpawnBlockSection(int BlockType, int length, int xAxis);
 	void SpawnPlatform(int BlockType, int length);
 	void SpawnTopPlatform(int length);
 	void SpawnUnder();
-
-	UFUNCTION(BlueprintCallable)
-	void SaveLevelSeqToFile();
-	int32  SelectSectionBasedOnProbability(const TMap<int32, float>& Probabilities);
-	void DetermineProbability();
-	void NormalizeProbabilities(TMap<int32, float>& Probabilities);
-	int m_loc;
-	TMap<int32, float> SectionProbabilities;
-
-	void Fitness();
-	int m_emptySect, m_pipeSect, m_StairsSect, m_SingleBlockSect,m_singlePlat, m_SmallPlatSect, m_LargePlatSect;
-	int m_Fitness;
-	
-	
-	FString LevelSeq;
-    int m_PreviousSect;
-
+	void SaveData(const FString& Genome, const FString& Data);
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

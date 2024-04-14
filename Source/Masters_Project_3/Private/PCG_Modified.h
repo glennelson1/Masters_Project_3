@@ -39,6 +39,7 @@ protected:
 	void SpawnTwoPlatform();
 	void SpawnTwoLargePlatform();
 
+	
 	int m_loc;
 	int num;
 	FString LevelSeq;

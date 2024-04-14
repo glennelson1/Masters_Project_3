@@ -8,7 +8,13 @@ APCG_FitnessFunc::APCG_FitnessFunc()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	SectionProbabilities.Add(0, 10.0f); // Empty
+	SectionProbabilities.Add(1, 10.0f); // Pipes
+	SectionProbabilities.Add(2, 10.0f); // Stairs
+	SectionProbabilities.Add(3, 10.0f); // Single Block
+	SectionProbabilities.Add(4, 10.0f); // One Platform
+	SectionProbabilities.Add(5, 0.0f); // Small Platforms
+	SectionProbabilities.Add(6, 0.0f); // Large Platforms
 }
 
 // Called when the game starts or when spawned
@@ -24,7 +30,10 @@ void APCG_FitnessFunc::DeleteGrid()
 		actor->Destroy();
 		
 	}
+	m_emptySect= 0, m_pipeSect =0, m_StairsSect =0, m_SingleBlockSect =0,m_singlePlat = 0, m_SmallPlatSect = 0;
+	m_LargePlatSect = 0;
 	m_PreviousSect = 0;
+	m_Fitness = 0;
 	LevelSeq.Empty();
 }
 void APCG_FitnessFunc::SpawnGrid()
@@ -32,71 +41,69 @@ void APCG_FitnessFunc::SpawnGrid()
 	DeleteGrid();
 	m_loc = 0;
 	
-	
-
-	
-	
 	if (RandomGen)
 	{
-		for (int i = 0; i <= 15; i++)
+		for (int i = 0; i <= 20; i++)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Running"));
-			int32 RandomInt= FMath::RandRange(0, 6);
-			//UE_LOG(LogTemp, Warning, TEXT("The integer value is: %d"), RandomInt);
-			switch(RandomInt)
-			{
-			case 0:
-				SpawnEmptySection();
-				m_loc += 10;
-				LevelSeq += FString::Printf(TEXT("%d,"), 0);
-				m_PreviousSect = 0;
-				break;
-			case 1:
-				SpawnPipeSection();
-				m_loc += 10;
-				LevelSeq += FString::Printf(TEXT("%d,"), 1);
-				m_PreviousSect = 1;
-				break;
-			case 2:
-				SpawnStairsSection();
-				m_loc += 10;
-				LevelSeq += FString::Printf(TEXT("%d,"), 2);
-				m_PreviousSect = 2;
-				break;
-			case 3:
-				SpawnSingleBlockSection();
-				m_loc += 10;
-				LevelSeq += FString::Printf(TEXT("%d,"), 3);
-				m_PreviousSect = 3;
-				break;
-			case 4:
-				SpawnSinglePlatform();
-				m_loc += 10;
-				LevelSeq += FString::Printf(TEXT("%d,"), 4);
-				m_PreviousSect = 4;
-				break;
-			case 5:
-				SpawnTwoPlatform();
-				m_loc += 10;
-				LevelSeq += FString::Printf(TEXT("%d,"), 5);
-				m_PreviousSect = 5;
-				break;
-			case 6:
-				SpawnTwoLargePlatform();
-				m_loc += 10;
-				LevelSeq += FString::Printf(TEXT("%d,"), 6);
-				m_PreviousSect = 6;
-				break;
-			default:
-				UE_LOG(LogTemp, Warning, TEXT("Null"));
-				break;
-			}
-		}
-		UE_LOG(LogTemp, Warning, TEXT("The Actor's name is %s"), *LevelSeq);
+			  // Call DetermineProbability to adjust the spawn probabilities based on the previous section
+			DetermineProbability();
+
+			// Select the next section type based on the adjusted probabilities
+			int32 SelectedSection = SelectSectionBasedOnProbability(SectionProbabilities);
+			
+            // Spawn the selected section
+            switch(SelectedSection)
+            {
+            case 0:
+                SpawnEmptySection();
+                m_emptySect++;
+                
+                break;
+            case 1: //pipes
+                SpawnPipeSection();
+                m_pipeSect++;
+                
+                break;
+            case 2: //stairs 
+                SpawnBlockSection(3, 6, 100);
+                m_StairsSect++;
+              
+                break;
+            case 3: //single block
+                SpawnBlockSection(5, 6, 400);
+                m_SingleBlockSect++;
+                
+                break;
+            case 4: //one platform
+            	SpawnPlatform(4, 5);
+                m_singlePlat++;
+                
+                break;
+            case 5: //small platforms
+                SpawnTopPlatform(3);
+                m_SmallPlatSect++;
+            	
+                break;
+            case 6: //two large platforms
+                SpawnTopPlatform(6);
+                m_LargePlatSect++;
+                
+                break;
+            // Ensure there's a default case, possibly to handle unexpected values
+            default:
+                UE_LOG(LogTemp, Warning, TEXT("Invalid section selection"));
+                break;
+            }
+			m_loc += 10; // Assuming each section advances 'm_loc' by 10 units
+			LevelSeq += FString::Printf(TEXT("%d,"), SelectedSection);
+			m_PreviousSect = SelectedSection;
+			
+        }
 	}
 	else
 	{
-		LevelSeq = "1,6,2,1,3,6,3,0,6,6,4,5,5,2,1,1,";
+		LevelSeq = "2,4,1,0,3,2,2,3,1,0,4,2,2,3,4,2,2,3,0,4,6,";
+
 		for (int i = 0; i <= 30; i++)
 		{
 			//UE_LOG(LogTemp, Warning, TEXT("The integer value is: %d"), LevelSeq[i]);
@@ -112,30 +119,28 @@ void APCG_FitnessFunc::SpawnGrid()
 				m_loc += 10;
 				break;
 			case '2':
-				SpawnStairsSection();
+				SpawnBlockSection(3, 6, 100);
 				m_loc += 10;
 				break;
 			case '3':
-				SpawnSingleBlockSection();
+				SpawnBlockSection(5, 6, 400);
 				m_loc += 10;
 				break;
 			case '4':
-				SpawnSinglePlatform();
+				SpawnPlatform(4, 5);
 				m_loc += 10;
 				break;
 			case '5':
-				SpawnTwoPlatform();
+				SpawnTopPlatform(3);
 				m_loc += 10;
 			case '6':
-				SpawnTwoLargePlatform();
+				SpawnTopPlatform(6);
 				m_loc += 10;
 			
 			}
 		}
-		UE_LOG(LogTemp, Warning, TEXT("The Actor's name is %s"), *LevelSeq);
+		
 	}
-	
-	
 }
 void APCG_FitnessFunc::SpawnEmptySection()
 {
@@ -172,44 +177,42 @@ void APCG_FitnessFunc::SpawnPipeSection()
 		
 	NewCell = GetWorld()->SpawnActor<AActor>(CellClasses[2], SpawnLocation2, FRotator::ZeroRotator);
 	Cellref.Add(NewCell);
+	int32 randint = FMath::RandRange(0, 100);
+	if(randint >=80)
+	{
+		SpawnUnder();
+	}
 }
 
-void APCG_FitnessFunc::SpawnStairsSection()
+
+
+void APCG_FitnessFunc::SpawnBlockSection(int BlockType, int length, int zAxis)
 {
 	SpawnEmptySection();
-	FVector SpawnLocation = FVector((m_loc + 6) * 100, 0,100); 
+	FVector SpawnLocation = FVector((m_loc + length) * 100, 0,zAxis); 
 	AActor* NewCell;
-	NewCell = GetWorld()->SpawnActor<AActor>(CellClasses[3], SpawnLocation, FRotator::ZeroRotator);
+	NewCell = GetWorld()->SpawnActor<AActor>(CellClasses[BlockType], SpawnLocation, FRotator::ZeroRotator);
 	Cellref.Add(NewCell);
 }
 
-void APCG_FitnessFunc::SpawnSingleBlockSection()
-{
-	SpawnEmptySection();
-	FVector SpawnLocation = FVector((m_loc + 6) * 100, 0,400); 
-	AActor* NewCell;
-	NewCell = GetWorld()->SpawnActor<AActor>(CellClasses[5], SpawnLocation, FRotator::ZeroRotator);
-	Cellref.Add(NewCell);
-}
-
-void APCG_FitnessFunc::SpawnSinglePlatform()
+void APCG_FitnessFunc::SpawnPlatform(int BlockType, int length)
 {
 	SpawnEmptySection();
 	for (int32 X = m_loc; X < m_loc + 3; X++)
 	{
-		FVector SpawnLocation = FVector((X + 5) * 100, 0,400); 
+		FVector SpawnLocation = FVector((X + length) * 100, 0,400); 
 		AActor* NewCell;
-		NewCell = GetWorld()->SpawnActor<AActor>(CellClasses[4], SpawnLocation, FRotator::ZeroRotator);
+		NewCell = GetWorld()->SpawnActor<AActor>(CellClasses[BlockType], SpawnLocation, FRotator::ZeroRotator);
 		Cellref.Add(NewCell);
 	}
 	
 }
 
-void APCG_FitnessFunc::SpawnTwoPlatform()
+void APCG_FitnessFunc::SpawnTopPlatform(int length)
 {
 	SpawnEmptySection();
-	SpawnSinglePlatform();
-	for (int32 X = m_loc; X < m_loc + 3; X++)
+	SpawnPlatform(4, 5);
+	for (int32 X = m_loc; X < m_loc + length; X++)
 	{
 		FVector SpawnLocation = FVector((X + 10) * 100, 0,800); 
 		AActor* NewCell;
@@ -218,27 +221,19 @@ void APCG_FitnessFunc::SpawnTwoPlatform()
 	}
 }
 
-void APCG_FitnessFunc::SpawnTwoLargePlatform()
+void APCG_FitnessFunc::SpawnUnder()
 {
-	SpawnEmptySection();
-	SpawnSinglePlatform();
-	
-	for (int32 X = m_loc; X < m_loc + 6; X++)
-	{
-		FVector SpawnLocation = FVector((X + 10) * 100, 0,800); 
-		AActor* NewCell;
-		NewCell = GetWorld()->SpawnActor<AActor>(CellClasses[4], SpawnLocation, FRotator::ZeroRotator);
-		Cellref.Add(NewCell);
-				
-	}
+	FVector SpawnLocation = FVector(m_loc * 100, 0,-800); 
+	AActor* NewCell;
+	NewCell = GetWorld()->SpawnActor<AActor>(CellClasses[8], SpawnLocation, FRotator::ZeroRotator);
+	Cellref.Add(NewCell);
 }
 
 void APCG_FitnessFunc::SaveLevelSeqToFile()
 {
 	FString SaveFilePath = FPaths::ProjectDir() + TEXT("/LevelSequences/AllGoodLevelSeqs.txt");
-	int32 ChunkSize = 30; // Size of each small sequence //11
-
-	// Ensure the directory exists before trying to save the file
+	int32 ChunkSize = 50;
+	
 	FString SaveDirectory = FPaths::GetPath(SaveFilePath);
 	IFileManager& FileManager = IFileManager::Get();
 	if (!FileManager.DirectoryExists(*SaveDirectory))
@@ -246,19 +241,19 @@ void APCG_FitnessFunc::SaveLevelSeqToFile()
 		FileManager.MakeDirectory(*SaveDirectory, true);
 	}
 
-	// Break down LevelSeq into smaller sequences of ChunkSize and save each
+
 	for (int32 StartIndex = 0; StartIndex < LevelSeq.Len(); StartIndex += ChunkSize)
 	{
-		// Extract a substring of ChunkSize length from LevelSeq
+		
 		FString SubSequence = LevelSeq.Mid(StartIndex, ChunkSize);
         
-		// Ensure it ends with a newline for readability in the file
+		
 		FString ContentToSave = SubSequence + TEXT("\n");
 
-		// Attempt to append the content to the specified file
+		
 		bool bWasSuccessful = FFileHelper::SaveStringToFile(ContentToSave, *SaveFilePath, FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
 
-		// Optionally, log each chunk save attempt
+		
 		if (bWasSuccessful)
 		{
 			UE_LOG(LogTemp, Log, TEXT("Subsequence successfully appended to %s"), *SaveFilePath);
@@ -270,6 +265,135 @@ void APCG_FitnessFunc::SaveLevelSeqToFile()
 	}
 }
 
+
+
+int32  APCG_FitnessFunc::SelectSectionBasedOnProbability(const TMap<int32, float>& Probabilities)
+{
+	
+	float TotalProbability = 0.0f;
+	for (const auto& Elem : Probabilities)
+	{
+		TotalProbability += Elem.Value;
+	}
+
+	
+	float RandomPoint = FMath::FRandRange(0.0f, TotalProbability);
+
+	
+	float CumulativeProbability = 0.0f;
+	for (const auto& Elem : Probabilities)
+	{
+		CumulativeProbability += Elem.Value;
+
+		
+		if (RandomPoint <= CumulativeProbability)
+		{
+			return Elem.Key; // Return the section type
+		}
+	}
+
+	return 0;
+}
+
+void APCG_FitnessFunc::DetermineProbability()
+{
+	
+	SectionProbabilities = {
+		{0, 10.0f}, // Empty
+		{1, 10.0f}, // Pipes
+		{2, 10.0f}, // Stairs
+		{3, 10.0f}, // Single Block
+		{4, 10.0f}, // One Platform
+		{5, 0.0f}, // Small Platforms
+		{6, 0.0f}  // Large Platforms
+	};
+	
+			
+	switch(m_PreviousSect)
+	{
+	case 0: // Last section was Empty
+		SectionProbabilities[1] += 5.0f; 
+		SectionProbabilities[2] += 5.0f;
+		SectionProbabilities[0] -= 10.0f;
+		SectionProbabilities[4] += 10.0f;
+		SectionProbabilities[5] += 10.0f;
+		SectionProbabilities[6] += 10.0f;
+		break;
+	case 1: // Last section was Pipes
+		SectionProbabilities[0] += 5.0f;
+		SectionProbabilities[1] -= 10.0f;
+		SectionProbabilities[5] += 5.0f;
+		SectionProbabilities[6] += 5.0f;
+		SectionProbabilities[3] += 20.0f;
+		SectionProbabilities[4] += 10.0f;
+		break;
+	case 2: // Last section was Stairs
+		SectionProbabilities[3] += 10.0f; 
+		SectionProbabilities[5] -= 5.0f;
+		SectionProbabilities[3] += 5.0f;
+		SectionProbabilities[5] += 5.0f;
+		SectionProbabilities[4] += 10.0f;
+		SectionProbabilities[6] += 5.0f;
+		break;
+	case 3: // Last section was Single Block
+		SectionProbabilities[3] -= 10.0f; 
+		SectionProbabilities[4] += 5.0f; 
+		SectionProbabilities[0] += 5.0f;
+		SectionProbabilities[5] += 5.0f;
+		SectionProbabilities[4] += 5.0f;
+		SectionProbabilities[6] += 5.0f;
+		break;
+	case 4: // Last section was One Platform
+		SectionProbabilities[5] += 10.0f;
+		SectionProbabilities[6] += 10.0f;
+		SectionProbabilities[1] -= 5.0f;
+		SectionProbabilities[4] -= 10.0f;
+		break;
+	case 5: // Last section was Small Platforms
+		SectionProbabilities[5] -= 10.0f; 
+		SectionProbabilities[6] -= 10.0f;
+		SectionProbabilities[6] += 10.0f;
+		SectionProbabilities[4] += 10.0f;
+		
+		break;
+	case 6: // Last section was Large Platforms
+		SectionProbabilities[5] -= 10.0f; 
+		SectionProbabilities[6] -= 10.0f;
+		SectionProbabilities[2] += 4.0f; 
+		SectionProbabilities[0] += 5.0f;
+		SectionProbabilities[4] += 10.0f;
+		break;
+	}
+	//UE_LOG(LogTemp, Warning, TEXT("The float value is: %f"), Fitness());
+
+	
+	NormalizeProbabilities(SectionProbabilities);
+}
+
+void APCG_FitnessFunc::NormalizeProbabilities(TMap<int32, float>& Probabilities)
+{
+	float Total = 0.0f;
+	for (const auto& Elem : Probabilities)
+	{
+		Total += Elem.Value;
+	}
+
+	for (auto& Elem : Probabilities)
+	{
+		Elem.Value = (Elem.Value / Total) * 100.0f; 
+	}
+	
+}
+
+void APCG_FitnessFunc::Fitness()
+{
+	
+	
+	
+	
+	
+	
+}
 
 // Called every frame
 void APCG_FitnessFunc::Tick(float DeltaTime)

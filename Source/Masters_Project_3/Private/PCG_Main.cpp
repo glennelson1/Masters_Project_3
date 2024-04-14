@@ -33,7 +33,7 @@ void APCG_Main::SpawnGrid()
 	DeleteGrid();
 	RandomChoices.Empty();
 	
-	for(int i = 0; i < 10; i += 10)
+	for(int i = 0; i < 200; i += 10)
 	{
 		int32 RandomInt= FMath::RandRange(0, 10);
 		RandomChoices.Add(RandomInt);
