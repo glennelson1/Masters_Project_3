@@ -30,8 +30,11 @@ protected:
 
 	
 	UFUNCTION(BlueprintCallable)
+	void SpawnLevel();
+	
 	void SpawnGridFromGenome(const FString& Genome);
 
+	
 
 	UPROPERTY(EditAnywhere, Category = "Grid")
 	TArray<TSubclassOf<AActor>> CellClasses;

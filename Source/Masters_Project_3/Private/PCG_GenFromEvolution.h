@@ -37,6 +37,9 @@ protected:
 	void SpawnTopPlatform(int length);
 	void SpawnUnder();
 
+
+
+
 	UFUNCTION(BlueprintCallable)
 	void SaveLevelSeqToFile();
 	int32  SelectSectionBasedOnProbability(const TMap<int32, float>& Probabilities);
@@ -49,6 +52,8 @@ protected:
 	int m_emptySect, m_pipeSect, m_StairsSect, m_SingleBlockSect,m_singlePlat, m_SmallPlatSect, m_LargePlatSect;
 	int m_Fitness;
 	
+
+void AnalyzeData();
 	
 	FString LevelSeq;
 	int m_PreviousSect;

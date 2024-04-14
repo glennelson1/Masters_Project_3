@@ -116,9 +116,18 @@ float APCG_Evoluctionary::CalculateFitness(const FString& LevelSequence)
 	return static_cast<float>(UniqueSections.Num()); 
 }
 
+void APCG_Evoluctionary::SpawnLevel()
+{
+	EvaluatePopulation();
+	Selection();
+	Crossover();
+	Mutation();
+	SpawnGridFromGenome(Population[0]);
+}
+
 void APCG_Evoluctionary::SpawnGridFromGenome(const FString& Genome)
 {
-	// First, clear any existing level structures or actors
+
 	DeleteGrid();
     
 	TArray<FString> Sections;
