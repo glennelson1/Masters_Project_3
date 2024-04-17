@@ -29,7 +29,7 @@ void APCG_Evoluctionary::InitializePopulation()
 	for (int i = 0; i < PopulationSize; i++) {
 		FString Genome;
 		for (int j = 0; j < GenomeLength; j++) {
-			int SectionType = FMath::RandRange(0, 6);  // Assuming section types range from 0 to 6
+			int SectionType = FMath::RandRange(0, 6);  
 			Genome += FString::FromInt(SectionType);
 			if (j < GenomeLength - 1) Genome += ",";
 		}
@@ -342,10 +342,11 @@ void APCG_Evoluctionary::SaveData(const FString& Genome, const FString& Data)
 {
 	FString SaveFilePath;
 	// Check if it is the 100th generation
-	if (m_CurrentGeneration == 100) {
-		SaveFilePath = FPaths::ProjectDir() + TEXT("/LevelSequences/GameLevelDataAfterEvo.txt");
-	} else {
+	if (m_CurrentGeneration <= 100) {
 		SaveFilePath = FPaths::ProjectDir() + TEXT("/LevelSequences/GameLevelData.txt");
+	} else {
+		//SaveFilePath = FPaths::ProjectDir() + TEXT("/LevelSequences/GameLevelDataAfterEvo.txt");
+		UE_LOG(LogTemp, Warning, TEXT("Finish Evo"));
 	}
 
 	FString ContentToSave = FString::Printf(TEXT("Genome: %s | Data: %s\n"), *Genome, *Data);
