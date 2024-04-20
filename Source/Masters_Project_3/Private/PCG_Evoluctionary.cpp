@@ -140,8 +140,7 @@ void APCG_Evoluctionary::AdjustMutationRate()
 	// Reduce the mutation rate as the number of generations increases
 	float decayFactor = 1.0f - static_cast<float>(m_CurrentGeneration) / m_CurrentGeneration;
 	m_MutationRate = 0.1f * decayFactor;
-
-	// Calculate current diversity
+	
 	float currentDiversity = CalculateDiversity();
 
 	// If diversity is too low, boost the mutation rate
@@ -180,14 +179,7 @@ float APCG_Evoluctionary::CalculateFitness(const FString& LevelSequence)
 	return static_cast<float>(UniqueSections.Num()); 
 }
 
-void APCG_Evoluctionary::SpawnLevel()
-{
-	EvaluatePopulation();
-	Selection();
-	Crossover();
-	Mutation();
-	SpawnGridFromGenome(Population[0]);
-}
+
 
 void APCG_Evoluctionary::SpawnGridFromGenome(const FString& Genome)
 {
@@ -349,7 +341,7 @@ void APCG_Evoluctionary::SaveData(const FString& Genome, const FString& Data)
 		UE_LOG(LogTemp, Warning, TEXT("Finish Evo"));
 	}
 
-	FString ContentToSave = FString::Printf(TEXT("Genome: %s | Data: %s\n"), *Genome, *Data);
+	FString ContentToSave = FString::Printf(TEXT("Genome: %s\n"), *Genome);
 
 	if (!FFileHelper::SaveStringToFile(ContentToSave, *SaveFilePath, FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append)) {
 		UE_LOG(LogTemp, Warning, TEXT("Failed to save data to %s"), *SaveFilePath);

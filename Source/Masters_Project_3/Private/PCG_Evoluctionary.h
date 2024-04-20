@@ -38,8 +38,7 @@ protected:
 	float CalculateFitness(const FString& LevelSequence);
 
 	
-	UFUNCTION(BlueprintCallable)
-	void SpawnLevel();
+	
 	
 	void SpawnGridFromGenome(const FString& Genome);
 
