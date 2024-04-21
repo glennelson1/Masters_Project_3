@@ -341,7 +341,7 @@ void APCG_Evoluctionary::SaveData(const FString& Genome, const FString& Data)
 		UE_LOG(LogTemp, Warning, TEXT("Finish Evo"));
 	}
 
-	FString ContentToSave = FString::Printf(TEXT("Genome: %s\n"), *Genome);
+	FString ContentToSave = FString::Printf(TEXT("%s\n"), *Genome);
 
 	if (!FFileHelper::SaveStringToFile(ContentToSave, *SaveFilePath, FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append)) {
 		UE_LOG(LogTemp, Warning, TEXT("Failed to save data to %s"), *SaveFilePath);
