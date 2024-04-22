@@ -335,7 +335,7 @@ void APCG_Evoluctionary::SaveData(const FString& Genome, const FString& Data)
 	FString SaveFilePath;
 	// Check if it is the 100th generation
 	if (m_CurrentGeneration <= 100) {
-		SaveFilePath = FPaths::ProjectDir() + TEXT("/LevelSequences/GameLevelData.txt");
+		SaveFilePath = FPaths::ProjectDir() + TEXT("/Content/LevelSequences/GameLevelData.txt");
 	} else {
 		//SaveFilePath = FPaths::ProjectDir() + TEXT("/LevelSequences/GameLevelDataAfterEvo.txt");
 		UE_LOG(LogTemp, Warning, TEXT("Finish Evo"));

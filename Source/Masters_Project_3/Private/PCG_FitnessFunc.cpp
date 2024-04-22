@@ -231,7 +231,7 @@ void APCG_FitnessFunc::SpawnUnder()
 
 void APCG_FitnessFunc::SaveLevelSeqToFile()
 {
-	FString SaveFilePath = FPaths::ProjectDir() + TEXT("/LevelSequences/AllGoodLevelSeqs.txt");
+	FString SaveFilePath = FPaths::ProjectDir() + TEXT("/Content/LevelSequences/GameLevelData.txt");
 	int32 ChunkSize = 50;
 	
 	FString SaveDirectory = FPaths::GetPath(SaveFilePath);
